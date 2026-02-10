@@ -9,25 +9,29 @@ import { Button } from '@/components/ui/button';
 import { X, Video, Info, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Using a more reliable public video source
+// This specific sample is natively 24fps
 const DEFAULT_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 const Index = () => {
   const [videoSource, setVideoSource] = useState<File | string>(DEFAULT_VIDEO_URL);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [fps, setFps] = useState(30);
-  const [sourceFPS, setSourceFPS] = useState(30);
+  const [fps, setFps] = useState(24);
+  const [sourceFPS, setSourceFPS] = useState(24);
 
   const handleVideoUpload = (file: File) => {
     setVideoSource(file);
     setIsPlaying(true);
+    // Reset to 30 as a safe guess for most user uploads, 
+    // but they can calibrate in settings
+    setSourceFPS(30);
+    setFps(30);
   };
 
   const handleReset = () => {
     setVideoSource("");
     setIsPlaying(false);
-    setFps(30);
-    setSourceFPS(30);
+    setFps(24);
+    setSourceFPS(24);
   };
 
   const isDefault = typeof videoSource === 'string' && videoSource === DEFAULT_VIDEO_URL;
@@ -72,7 +76,7 @@ const Index = () => {
                   <Info className="h-4 w-4 text-blue-500" />
                   <AlertTitle className="text-blue-500 font-semibold">No-Skip Mode Active</AlertTitle>
                   <AlertDescription className="text-muted-foreground text-xs">
-                    The video speed is locked to your target FPS. Lowering FPS creates a smooth slow-motion effect showing every frame.
+                    The video speed is locked to your target FPS. For 100% frame accuracy, ensure the <strong>Source FPS</strong> in settings matches your video file.
                   </AlertDescription>
                 </Alert>
 
@@ -84,7 +88,7 @@ const Index = () => {
                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     )}
                     <span className="text-sm font-medium truncate max-w-[200px] md:max-w-md">
-                      {videoSource instanceof File ? videoSource.name : "Demo: Big Buck Bunny"}
+                      {videoSource instanceof File ? videoSource.name : "Demo: Big Buck Bunny (24fps)"}
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground font-mono">
@@ -106,15 +110,16 @@ const Index = () => {
                 sourceFPS={sourceFPS}
                 onSourceFPSChange={setSourceFPS}
                 onReset={() => {
-                  setFps(30);
-                  setSourceFPS(30);
+                  setFps(isDefault ? 24 : 30);
+                  setSourceFPS(isDefault ? 24 : 30);
                 }}
               />
               
               <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
-                <h5 className="font-semibold text-sm mb-2">Try it out</h5>
+                <h5 className="font-semibold text-sm mb-2">Why Source FPS?</h5>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  We've loaded a demo video for you. Try sliding the FPS down to <strong>1 FPS</strong> to see the animation progress frame-by-frame!
+                  Browsers don't always report a video's native FPS. To see every frame perfectly, we calculate: <br/>
+                  <code className="text-xs bg-primary/10 px-1 rounded">Speed = Target / Source</code>.
                 </p>
               </div>
             </div>
