@@ -4,53 +4,62 @@ import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface VideoCanvasPlayerProps {
-  videoFile: File;
+  videoSource: File | string;
   targetFPS: number;
   sourceFPS: number;
   isPlaying: boolean;
   className?: string;
 }
 
-const VideoCanvasPlayer = ({ videoFile, targetFPS, sourceFPS, isPlaying, className }: VideoCanvasPlayerProps) => {
+const VideoCanvasPlayer = ({ videoSource, targetFPS, sourceFPS, isPlaying, className }: VideoCanvasPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
   const requestRef = useRef<number>();
 
   useEffect(() => {
-    const url = URL.createObjectURL(videoFile);
+    let url = "";
+    if (videoSource instanceof File) {
+      url = URL.createObjectURL(videoSource);
+    } else {
+      url = videoSource;
+    }
+    
     setVideoUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [videoFile]);
+    
+    return () => {
+      if (videoSource instanceof File) {
+        URL.revokeObjectURL(url);
+      }
+    };
+  }, [videoSource]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Adjust playback rate to match target FPS relative to source FPS
-    // This ensures every frame is shown without skipping
     const rate = targetFPS / sourceFPS;
-    video.playbackRate = Math.max(0.0625, Math.min(16, rate)); // Browser limits
+    video.playbackRate = Math.max(0.0625, Math.min(16, rate));
 
     if (isPlaying) {
       video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [isPlaying, targetFPS, sourceFPS]);
+  }, [isPlaying, targetFPS, sourceFPS, videoUrl]);
 
   const renderFrame = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas) return;
+    if (!video || !canvas || video.paused || video.ended) {
+      requestRef.current = requestAnimationFrame(renderFrame);
+      return;
+    }
 
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    // Draw the current video frame to canvas as fast as the browser allows
-    // The video.playbackRate handles the "no skipping" requirement
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
     requestRef.current = requestAnimationFrame(renderFrame);
   };
 

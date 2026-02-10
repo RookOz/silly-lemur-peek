@@ -6,26 +6,30 @@ import VideoCanvasPlayer from '@/components/VideoCanvasPlayer';
 import FPSController from '@/components/FPSController';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from '@/components/ui/button';
-import { X, Video, Info } from 'lucide-react';
+import { X, Video, Info, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+const DEFAULT_VIDEO_URL = "https://assets.mixkit.co/videos/preview/mixkit-spinning-around-the-earth-in-space-4008-large.mp4";
+
 const Index = () => {
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoSource, setVideoSource] = useState<File | string>(DEFAULT_VIDEO_URL);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [fps, setFps] = useState(30);
   const [sourceFPS, setSourceFPS] = useState(30);
 
   const handleVideoUpload = (file: File) => {
-    setVideoFile(file);
+    setVideoSource(file);
     setIsPlaying(true);
   };
 
   const handleReset = () => {
-    setVideoFile(null);
+    setVideoSource("");
     setIsPlaying(false);
     setFps(30);
     setSourceFPS(30);
   };
+
+  const isDefault = typeof videoSource === 'string' && videoSource === DEFAULT_VIDEO_URL;
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-foreground p-4 md:p-8">
@@ -41,7 +45,7 @@ const Index = () => {
               <p className="text-muted-foreground text-sm">Sequential Frame-by-Frame Player</p>
             </div>
           </div>
-          {videoFile && (
+          {videoSource && (
             <Button variant="ghost" onClick={handleReset} className="text-muted-foreground hover:text-destructive">
               <X size={18} className="mr-2" />
               Clear Video
@@ -52,12 +56,12 @@ const Index = () => {
         <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column: Player */}
           <div className="lg:col-span-8 space-y-6">
-            {!videoFile ? (
+            {!videoSource ? (
               <VideoUploader onVideoUpload={handleVideoUpload} className="h-[400px]" />
             ) : (
               <div className="space-y-4">
                 <VideoCanvasPlayer 
-                  videoFile={videoFile} 
+                  videoSource={videoSource} 
                   targetFPS={fps} 
                   sourceFPS={sourceFPS}
                   isPlaying={isPlaying} 
@@ -67,19 +71,23 @@ const Index = () => {
                   <Info className="h-4 w-4 text-blue-500" />
                   <AlertTitle className="text-blue-500 font-semibold">No-Skip Mode Active</AlertTitle>
                   <AlertDescription className="text-muted-foreground text-xs">
-                    The video speed is now locked to your target FPS. If you set 1 FPS, the video will play in extreme slow motion, showing every single frame one by one.
+                    The video speed is locked to your target FPS. Lowering FPS creates a smooth slow-motion effect showing every frame.
                   </AlertDescription>
                 </Alert>
 
                 <div className="bg-card border rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    {isDefault ? (
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                    ) : (
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    )}
                     <span className="text-sm font-medium truncate max-w-[200px] md:max-w-md">
-                      {videoFile.name}
+                      {videoSource instanceof File ? videoSource.name : "Demo: Earth in Space"}
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground font-mono">
-                    {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                    {videoSource instanceof File ? `${(videoSource.size / (1024 * 1024)).toFixed(2)} MB` : "Sample Video"}
                   </span>
                 </div>
               </div>
@@ -103,9 +111,9 @@ const Index = () => {
               />
               
               <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
-                <h5 className="font-semibold text-sm mb-2">Calibration Tip</h5>
+                <h5 className="font-semibold text-sm mb-2">Try it out</h5>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  To ensure perfect synchronization, use the settings icon to match the "Source FPS" to your video's original frame rate (usually 24, 30, or 60).
+                  We've loaded a demo video for you. Try sliding the FPS down to <strong>1 FPS</strong> to see the Earth rotate frame-by-frame!
                 </p>
               </div>
             </div>
