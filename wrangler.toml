@@ -2,8 +2,5 @@ name = "framecontrol"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-04-03"
 
-[site]
-bucket = "./dist"
-
-[env.production]
-name = "framecontrol-prod"
+# Cloudflare Pages does not use the [site] or [env] blocks in the same way as Workers.
+# The build output directory is defined above.
