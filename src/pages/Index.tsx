@@ -6,12 +6,14 @@ import VideoCanvasPlayer from '@/components/VideoCanvasPlayer';
 import FPSController from '@/components/FPSController';
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Button } from '@/components/ui/button';
-import { X, Video } from 'lucide-react';
+import { X, Video, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Index = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [fps, setFps] = useState(24);
+  const [fps, setFps] = useState(30);
+  const [sourceFPS, setSourceFPS] = useState(30);
 
   const handleVideoUpload = (file: File) => {
     setVideoFile(file);
@@ -21,7 +23,8 @@ const Index = () => {
   const handleReset = () => {
     setVideoFile(null);
     setIsPlaying(false);
-    setFps(24);
+    setFps(30);
+    setSourceFPS(30);
   };
 
   return (
@@ -35,7 +38,7 @@ const Index = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">FrameControl</h1>
-              <p className="text-muted-foreground text-sm">Precision FPS Video Player</p>
+              <p className="text-muted-foreground text-sm">Sequential Frame-by-Frame Player</p>
             </div>
           </div>
           {videoFile && (
@@ -56,8 +59,18 @@ const Index = () => {
                 <VideoCanvasPlayer 
                   videoFile={videoFile} 
                   targetFPS={fps} 
+                  sourceFPS={sourceFPS}
                   isPlaying={isPlaying} 
                 />
+                
+                <Alert className="bg-blue-500/5 border-blue-500/20">
+                  <Info className="h-4 w-4 text-blue-500" />
+                  <AlertTitle className="text-blue-500 font-semibold">No-Skip Mode Active</AlertTitle>
+                  <AlertDescription className="text-muted-foreground text-xs">
+                    The video speed is now locked to your target FPS. If you set 1 FPS, the video will play in extreme slow motion, showing every single frame one by one.
+                  </AlertDescription>
+                </Alert>
+
                 <div className="bg-card border rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -81,14 +94,18 @@ const Index = () => {
                 onTogglePlay={() => setIsPlaying(!isPlaying)}
                 fps={fps}
                 onFPSChange={setFps}
-                onReset={() => setFps(24)}
+                sourceFPS={sourceFPS}
+                onSourceFPSChange={setSourceFPS}
+                onReset={() => {
+                  setFps(30);
+                  setSourceFPS(30);
+                }}
               />
               
               <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
-                <h5 className="font-semibold text-sm mb-2">How it works</h5>
+                <h5 className="font-semibold text-sm mb-2">Calibration Tip</h5>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  This player uses a custom rendering engine to limit the visual output to your target FPS. 
-                  The video source plays at normal speed, but the display only updates at the frequency you choose.
+                  To ensure perfect synchronization, use the settings icon to match the "Source FPS" to your video's original frame rate (usually 24, 30, or 60).
                 </p>
               </div>
             </div>

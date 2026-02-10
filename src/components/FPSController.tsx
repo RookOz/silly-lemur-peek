@@ -1,20 +1,33 @@
 "use client";
 
 import React from 'react';
-import { Play, Pause, RotateCcw, FastForward, Rewind } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings2 } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface FPSControllerProps {
   isPlaying: boolean;
   onTogglePlay: () => void;
   fps: number;
   onFPSChange: (value: number) => void;
+  sourceFPS: number;
+  onSourceFPSChange: (value: number) => void;
   onReset: () => void;
 }
 
-const FPSController = ({ isPlaying, onTogglePlay, fps, onFPSChange, onReset }: FPSControllerProps) => {
+const FPSController = ({ 
+  isPlaying, 
+  onTogglePlay, 
+  fps, 
+  onFPSChange, 
+  sourceFPS, 
+  onSourceFPSChange, 
+  onReset 
+}: FPSControllerProps) => {
   return (
     <div className="bg-card border rounded-2xl p-6 shadow-sm space-y-6">
       <div className="flex items-center justify-between">
@@ -22,10 +35,37 @@ const FPSController = ({ isPlaying, onTogglePlay, fps, onFPSChange, onReset }: F
           <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Playback Control</h4>
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold tabular-nums">{fps}</span>
-            <Badge variant="secondary" className="font-mono">FPS</Badge>
+            <Badge variant="secondary" className="font-mono">Target FPS</Badge>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full">
+                <Settings2 size={18} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">Calibration</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Set the original FPS of your video for accurate playback.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="source-fps">Source Video FPS</Label>
+                  <Input
+                    id="source-fps"
+                    type="number"
+                    value={sourceFPS}
+                    onChange={(e) => onSourceFPSChange(Number(e.target.value))}
+                    className="h-8"
+                  />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button variant="outline" size="icon" onClick={onReset} className="rounded-full">
             <RotateCcw size={18} />
           </Button>
@@ -41,13 +81,13 @@ const FPSController = ({ isPlaying, onTogglePlay, fps, onFPSChange, onReset }: F
 
       <div className="space-y-4">
         <div className="flex justify-between text-xs font-medium text-muted-foreground">
-          <span>Slow (1 FPS)</span>
-          <span>Real-time / Fast (60 FPS)</span>
+          <span>Slow Motion</span>
+          <span>Real-time ({sourceFPS})</span>
         </div>
         <Slider
           value={[fps]}
           min={1}
-          max={60}
+          max={Math.max(60, sourceFPS * 2)}
           step={1}
           onValueChange={(val) => onFPSChange(val[0])}
           className="py-4"
@@ -67,12 +107,12 @@ const FPSController = ({ isPlaying, onTogglePlay, fps, onFPSChange, onReset }: F
           </Button>
         ))}
         <Button
-          variant={fps === 1 ? "default" : "outline"}
+          variant={fps === sourceFPS ? "default" : "outline"}
           size="sm"
-          onClick={() => onFPSChange(1)}
-          className="text-xs font-mono"
+          onClick={() => onFPSChange(sourceFPS)}
+          className="text-xs font-mono col-span-2"
         >
-          1 FPS
+          Match Source ({sourceFPS})
         </Button>
       </div>
     </div>
