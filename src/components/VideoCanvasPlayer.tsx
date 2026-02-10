@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { showError } from '@/utils/toast';
 
 interface VideoCanvasPlayerProps {
   videoSource: File | string;
@@ -36,13 +37,18 @@ const VideoCanvasPlayer = ({ videoSource, targetFPS, sourceFPS, isPlaying, class
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !videoUrl) return;
 
     const rate = targetFPS / sourceFPS;
     video.playbackRate = Math.max(0.0625, Math.min(16, rate));
 
     if (isPlaying) {
-      video.play().catch(() => {});
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Playback failed:", error);
+        });
+      }
     } else {
       video.pause();
     }
@@ -51,7 +57,8 @@ const VideoCanvasPlayer = ({ videoSource, targetFPS, sourceFPS, isPlaying, class
   const renderFrame = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.paused || video.ended) {
+    
+    if (!video || !canvas || video.paused || video.ended || video.readyState < 2) {
       requestRef.current = requestAnimationFrame(renderFrame);
       return;
     }
@@ -59,7 +66,13 @@ const VideoCanvasPlayer = ({ videoSource, targetFPS, sourceFPS, isPlaying, class
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    try {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    } catch (e) {
+      // This usually happens if CORS is not set up correctly on the remote video server
+      console.error("Canvas draw error:", e);
+    }
+    
     requestRef.current = requestAnimationFrame(renderFrame);
   };
 
@@ -79,6 +92,10 @@ const VideoCanvasPlayer = ({ videoSource, targetFPS, sourceFPS, isPlaying, class
     canvas.height = video.videoHeight;
   };
 
+  const handleVideoError = () => {
+    showError("Failed to load video. Please try a different file or URL.");
+  };
+
   return (
     <div className={cn("relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10", className)}>
       <video
@@ -88,7 +105,9 @@ const VideoCanvasPlayer = ({ videoSource, targetFPS, sourceFPS, isPlaying, class
         loop
         muted
         playsInline
+        crossOrigin="anonymous"
         onLoadedMetadata={handleLoadedMetadata}
+        onError={handleVideoError}
       />
       <canvas
         ref={canvasRef}

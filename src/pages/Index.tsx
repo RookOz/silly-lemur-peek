@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { X, Video, Info, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const DEFAULT_VIDEO_URL = "https://assets.mixkit.co/videos/preview/mixkit-spinning-around-the-earth-in-space-4008-large.mp4";
+// Using a more reliable public video source
+const DEFAULT_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 const Index = () => {
   const [videoSource, setVideoSource] = useState<File | string>(DEFAULT_VIDEO_URL);
@@ -83,7 +84,7 @@ const Index = () => {
                       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     )}
                     <span className="text-sm font-medium truncate max-w-[200px] md:max-w-md">
-                      {videoSource instanceof File ? videoSource.name : "Demo: Earth in Space"}
+                      {videoSource instanceof File ? videoSource.name : "Demo: Big Buck Bunny"}
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground font-mono">
@@ -113,7 +114,7 @@ const Index = () => {
               <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
                 <h5 className="font-semibold text-sm mb-2">Try it out</h5>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  We've loaded a demo video for you. Try sliding the FPS down to <strong>1 FPS</strong> to see the Earth rotate frame-by-frame!
+                  We've loaded a demo video for you. Try sliding the FPS down to <strong>1 FPS</strong> to see the animation progress frame-by-frame!
                 </p>
               </div>
             </div>
